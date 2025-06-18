@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz Anime</title>
+  <style>
+    body {
+      font-family: 'Arial Black', sans-serif;
+      background-color: #111;
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.8);
+      max-width: 800px;
+      margin: 50px auto;
+      border-radius: 15px;
+    }
+
+    h1 {
+      font-size: 32px;
+    }
+
+    .question {
+      font-size: 20px;
+      margin: 20px 0;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      background: white;
+      color: black;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 3px solid transparent;
+    }
+
+    .option:hover {
+      border-color: #00ff00;
+    }
+
+    .option.selected {
+      border-color: #00ff00;
+      background: #d7ffd7;
+    }
+
+    .buttons {
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: #00ff00;
+      color: black;
+      font-weight: bold;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ff0080;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      display: none;
+      font-weight: bold;
+      z-index: 1000;
+    }
+
+    #result {
+      font-size: 24px;
+      margin-top: 30px;
+      color: #00ff00;
+    }
+
+    #explanation {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    .answer-review {
+      text-align: left;
+      background: #222;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .correct { color: #00ff00; }
+    .wrong { color: #ff5050; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1 id="quiz-title">QUIZ NOMOR 1</h1>
+  <div class="question" id="question-text">Soal akan muncul di sini</div>
+  <div class="options" id="options-container"></div>
+
+  <div class="buttons" id="button-container">
+    <button class="btn" id="btn-back">LANJUT LAH<br>LU NYERAH GUA TENDANG</button>
+    <button class="btn" id="btn-next">LANJUTT</button>
+  </div>
+
+  <div id="result"></div>
+  <div id="explanation"></div>
+  <div id="review-container"></div>
+</div>
+
+<div class="popup" id="popup-msg">Jawab dulu cantik</div>
+
+<script>
+  const questions = [
+    { question: "Siapa nama panjangku?", answers: ["Praditya Satria Haruni", "Raditya haruni Satria", "Satria Raditya Haruni", "Praditya satria"], correct: 0 },
+    { question: "Kapan Aku Lahir?", answers: ["25 Oktober", "15 Desember","25 Desember", "15 Oktober"], correct: 2 },
+    { question: "Siapa Yang masih gamon?", answers: ["Dinda", "Dinda", "Dinda", "Radit"], correct: 3 },
+    { question: "Kapan Kita pertama kali Chat WhatsApp?", answers: ["14 agustus", "12 agustus", "05 agustus", "29 juni"], correct: 0 },
+    { question: "Kapan kita Memulai hubungan?", answers: ["12 agustus", "13 Agustus", "14 Agustus", "11 Agustus"], correct: 2 },
+    { question: "Kapan Terakhir Kali Kita chatan?", answers: ["12 Februari", "13 maret ", "Lah Jektas anjir", "12 maret"], correct: 2 },
+    { question: "siapa yang pertama Menanyakan tentang perasaan(confess)?", answers: ["Radit", "Dinda", "pak suji", "pak sutik"], correct: 1 },
+    { question: "kamu masih kangen aku??", answers: ["Iya", "Heem", "Ga             salah", "banget"], correct: [0,1,2,3] } // semua benar
+  ];
+
+  let current = 0;
+  let selected = -1;
+  let userAnswers = [];
+
+  const questionText = document.getElementById("question-text");
+  const optionsContainer = document.getElementById("options-container");
+  const title = document.getElementById("quiz-title");
+  const popup = document.getElementById("popup-msg");
+  const resultBox = document.getElementById("result");
+  const explanation = document.getElementById("explanation");
+  const reviewContainer = document.getElementById("review-container");
+
+  function showPopup(msg) {
+    popup.textContent = msg;
+    popup.style.display = "block";
+    setTimeout(() => popup.style.display = "none", 2000);
+  }
+
+  function renderQuestion() {
+    title.innerText = `QUIZ NOMOR ${current + 1}`;
+    questionText.innerText = questions[current].question;
+    optionsContainer.innerHTML = "";
+    selected = -1;
+
+    questions[current].answers.forEach((answer, i) => {
+      const div = document.createElement("div");
+      div.classList.add("option");
+      div.innerHTML = `<span style="font-size:20px; width:30px;">${String.fromCharCode(65 + i)}</span> ${answer}`;
+      div.onclick = () => {
+        document.querySelectorAll(".option").forEach(opt => opt.classList.remove("selected"));
+        div.classList.add("selected");
+        selected = i;
+      };
+      optionsContainer.appendChild(div);
+    });
+
+    // Atur tombol terakhir
+    const backBtn = document.getElementById("btn-back");
+    const nextBtn = document.getElementById("btn-next");
+
+    if (current === questions.length - 1) {
+      backBtn.style.display = "none";
+      nextBtn.textContent = "SELESAI";
+    } else {
+      backBtn.style.display = "inline-block";
+      nextBtn.textContent = "LANJUTT";
+    }
+  }
+
+  document.getElementById("btn-next").onclick = () => {
+    if (selected === -1) {
+      showPopup("Jawab dulu cantik");
+      return;
+    }
+
+    userAnswers[current] = selected;
+
+    if (current < questions.length - 1) {
+      current++;
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  };
+
+  document.getElementById("btn-back").onclick = () => {
+    if (selected === -1) {
+      showPopup("Jawab dulu cantik");
+    } else {
+      userAnswers[current] = selected;
+      current++;
+      renderQuestion();
+    }
+  };
+
+  function showResult() {
+    document.getElementById("button-container").innerHTML = `
+      <button class="btn" onclick="showReview()">LIHAT JAWABAN</button>
+    `;
+
+    optionsContainer.innerHTML = "";
+    questionText.innerHTML = "Quiz selesai!";
+    title.innerText = "HASIL QUIZ";
+
+    let benar = 0;
+    for (let i = 0; i < questions.length; i++) {
+      const correct = questions[i].correct;
+      const user = userAnswers[i];
+      if (Array.isArray(correct)) {
+        if (correct.includes(user)) benar++;
+      } else {
+        if (user === correct) benar++;
+      }
+    }
+
+    const salah = questions.length - benar;
+    resultBox.innerHTML = `✅ Jawaban Benar: ${benar}<br>❌ Jawaban Salah: ${salah}`;
+
+    const pesan = [
+      "kamu lupa ya :(",
+      "serius?",
+      "okelah :)",
+      "normal lah wajar namanya manusia bukan nabi boy",
+      "hebatt :>",
+      "kamu masih inget?",
+      "kamu wanita terbaik",
+      "aku tidak salah memilih wanita"
+    ];
+
+    explanation.innerText = pesan[benar - 1] || "";
+  }
+
+  function showReview() {
+    reviewContainer.innerHTML = "<h2>Ulasan Jawaban:</h2>";
+    questions.forEach((q, i) => {
+      const user = userAnswers[i];
+      const correct = q.correct;
+      const isCorrect = Array.isArray(correct) ? correct.includes(user) : user === correct;
+      const div = document.createElement("div");
+      div.classList.add("answer-review");
+      div.innerHTML = `
+        <strong>Soal ${i + 1}:</strong> ${q.question}<br>
+        Jawaban Kamu: <span class="${isCorrect ? 'correct' : 'wrong'}">${String.fromCharCode(65 + user)} - ${q.answers[user]}</span><br>
+        Jawaban Benar: ${
+          Array.isArray(correct)
+            ? correct.map(idx => `${String.fromCharCode(65 + idx)} - ${q.answers[idx]}`).join(", ")
+            : `${String.fromCharCode(65 + correct)} - ${q.answers[correct]}`
+        }
+      `;
+      reviewContainer.appendChild(div);
+    });
+  }
+
+  renderQuestion();
+</script>
+</body>
+</html>
